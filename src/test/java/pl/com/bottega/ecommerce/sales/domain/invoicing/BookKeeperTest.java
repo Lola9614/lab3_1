@@ -10,7 +10,6 @@ import pl.com.bottega.ecommerce.sales.domain.productscatalog.ProductType;
 import pl.com.bottega.ecommerce.sharedkernel.Money;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -55,7 +54,28 @@ public class BookKeeperTest {
 
         Invoice responseInvoice = bookKeeper.issuance(invoiceRequest,taxPolicy);
 
-        assertThat(responseInvoice.getNet(),is(new Money(1)));
+        assertThat(responseInvoice.getNet(),is(1));
+    }
+
+
+    @Test
+    public void shouldReturnProperQuantityValue() {
+
+        BookKeeper bookKeeper = new BookKeeper(new InvoiceFactory());
+        InvoiceRequest invoiceRequest = new InvoiceRequest(null);
+
+        ProductData productData = Mockito.mock(ProductData.class);
+        Mockito.when(productData.getType()).thenReturn(ProductType.STANDARD);
+
+        invoiceRequest.add(new RequestItem(productData,1,new Money(1)));
+
+        TaxPolicy taxPolicy = mock(TaxPolicy.class);
+        when(taxPolicy.calculateTax(Matchers.any(ProductType.class),Matchers.any(Money.class)))
+                .thenReturn(new Tax(new Money(1),null));
+
+        Invoice responseInvoice = bookKeeper.issuance(invoiceRequest,taxPolicy);
+
+        assertThat(responseInvoice.getItems().get(0).getQuantity(),is(new Money(2)));
     }
 
     @Test
