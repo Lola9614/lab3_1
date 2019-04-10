@@ -23,6 +23,7 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -34,9 +35,10 @@ public class AddProductCommandHandlerTest {
     ReservationRepository reservationRepository = mock(ReservationRepository.class);
     Product product = mock(Product.class);
     AddProductCommand addProductCommand = mock(AddProductCommand.class);
-    ArgumentCaptor<Reservation> reservation = ArgumentCaptor.forClass(Reservation.class);
     SystemContext systemContext = mock(SystemContext.class);
     Reservation reservation1 = mock(Reservation.class);
+    AddProductCommandHandler addProductCommandHandler = new AddProductCommandHandler(reservationRepository, productRepository, suggestionService,
+            clientRepository, systemContext);
 
 
     @Test
@@ -48,14 +50,24 @@ public class AddProductCommandHandlerTest {
         when(clientRepository.load(any())).thenReturn(new Client());
         when(systemContext.getSystemUser()).thenCallRealMethod();
 
-        AddProductCommandHandler addProductCommandHandler = new AddProductCommandHandler(reservationRepository, productRepository, suggestionService,
-                clientRepository, systemContext);
-
-
         addProductCommandHandler.handle(addProductCommand);
 
 
-        Mockito.verify(reservationRepository).save(reservation.capture());
-        assertThat(reservation.getAllValues().contains(product),is(false));
+        Mockito.verify(reservationRepository).save(reservation1);
+        assertThat(reservation1.contains(product),is(false));
+    }
+
+
+    @Test
+    public void shouldNotCallSuqqestMethodIfProductIsAvailable() {
+
+        when(productRepository.load(any())).thenReturn(product);
+        when(product.isAvailable()).thenReturn(true);
+        when(reservationRepository.load(any())).thenReturn(reservation1);
+
+        addProductCommandHandler.handle(addProductCommand);
+
+        Mockito.verify(reservationRepository).save(reservation1);
+        Mockito.verify(suggestionService,never()).suggestEquivalent(product,new Client());
     }
 }
