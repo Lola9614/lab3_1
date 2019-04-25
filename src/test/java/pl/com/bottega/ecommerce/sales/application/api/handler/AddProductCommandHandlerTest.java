@@ -1,5 +1,6 @@
 package pl.com.bottega.ecommerce.sales.application.api.handler;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -37,9 +38,17 @@ public class AddProductCommandHandlerTest {
     AddProductCommand addProductCommand = mock(AddProductCommand.class);
     SystemContext systemContext = mock(SystemContext.class);
     Reservation reservation1 = mock(Reservation.class);
-    AddProductCommandHandler addProductCommandHandler = new AddProductCommandHandler(reservationRepository, productRepository, suggestionService,
-            clientRepository, systemContext);
+    AddProductCommandHandler addProductCommandHandler = null;
 
+    @Before
+    public void setup() {
+        addProductCommandHandler = new AddProductCommandHandlerBuilder().withClientRepository(clientRepository)
+                                                                        .withProductRepository(productRepository)
+                                                                        .withReservationRepository(reservationRepository)
+                                                                        .withSuggestionService(suggestionService)
+                                                                        .withSystemContext(systemContext)
+                                                                        .bulid();
+    }
 
     @Test
     public void shouldNotAddProductToReservationIfItIsNotAvailable() {
@@ -52,11 +61,9 @@ public class AddProductCommandHandlerTest {
 
         addProductCommandHandler.handle(addProductCommand);
 
-
         Mockito.verify(reservationRepository).save(reservation1);
-        assertThat(reservation1.contains(product),is(false));
+        assertThat(reservation1.contains(product), is(false));
     }
-
 
     @Test
     public void shouldNotCallSuqqestMethodIfProductIsAvailable() {
@@ -68,6 +75,6 @@ public class AddProductCommandHandlerTest {
         addProductCommandHandler.handle(addProductCommand);
 
         Mockito.verify(reservationRepository).save(reservation1);
-        Mockito.verify(suggestionService,never()).suggestEquivalent(product,new Client());
+        Mockito.verify(suggestionService, never()).suggestEquivalent(product, new Client());
     }
 }
