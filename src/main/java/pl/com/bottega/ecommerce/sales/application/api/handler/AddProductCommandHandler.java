@@ -1,4 +1,4 @@
-/*
+		/*
  * Copyright 2011-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -59,14 +59,14 @@ public class AddProductCommandHandler implements CommandHandler<AddProductComman
 		Reservation reservation = reservationRepository.load(command.getOrderId());
 		
 		Product product = productRepository.load(command.getProductId());
-		
+
 		if (! product.isAvailable()){
-			Client client = loadClient();	
-			product = suggestionService.suggestEquivalent(product, client);
+			Client client = loadClient();
+			product = suggestionService.suggestEquivalent(product, client);;
 		}
-			
+
 		reservation.add(product, command.getQuantity());
-		
+
 		reservationRepository.save(reservation);
 		
 		return null;
